@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    container_name: voixa-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-voixa}
+      POSTGRES_USER: ${POSTGRES_USER:-voixa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voixa_dev_password}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-voixa} -d ${POSTGRES_DB:-voixa}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: voixa-redis
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

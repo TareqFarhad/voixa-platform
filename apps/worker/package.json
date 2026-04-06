@@ -1,0 +1,10 @@
+{
+  "name": "@voixa/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "python -m voixa_worker.main",
+    "lint": "python -m py_compile voixa_worker/*.py voixa_worker/pipeline/*.py",
+    "build": "python -m py_compile voixa_worker/*.py voixa_worker/pipeline/*.py"
+  }
+}

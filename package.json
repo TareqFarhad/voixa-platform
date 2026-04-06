@@ -1,0 +1,21 @@
+{
+  "name": "voixa-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter @voixa/web dev\" \"pnpm --filter @voixa/api dev\" \"pnpm --filter @voixa/worker dev\"",
+    "dev:web": "pnpm --filter @voixa/web dev",
+    "dev:api": "pnpm --filter @voixa/api dev",
+    "dev:worker": "pnpm --filter @voixa/worker dev",
+    "build": "pnpm -r --if-present build",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
