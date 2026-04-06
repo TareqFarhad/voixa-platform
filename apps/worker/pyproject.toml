@@ -1,0 +1,16 @@
+[project]
+name = "voixa-worker"
+version = "0.1.0"
+description = "Voixa AI worker scaffold"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.9.0",
+  "python-dotenv>=1.0.1"
+]
+
+[project.scripts]
+voixa-worker = "voixa_worker.main:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
