@@ -1,1 +1,1 @@
-"""Voixa worker package."""
+"""Voixa audio processing worker package."""

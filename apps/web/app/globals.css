@@ -2,12 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
   color-scheme: dark;
+  --noir: #07070a;
+  --obsidian: #0b0c12;
+  --pearl: #f5f3ee;
+  --champagne: #d9be80;
+  --midnight: #1a2238;
+}
+
+html,
+body {
+  background: var(--noir);
+  color: var(--pearl);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
 }
 
 body {
-  background: radial-gradient(circle at top, #1a2238 0%, #0a0a0d 45%, #070709 100%);
-  color: #f3f3f1;
-  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 20% -10%, rgba(42, 53, 95, 0.45), transparent 60%),
+    radial-gradient(900px 700px at 90% 0%, rgba(92, 31, 44, 0.3), transparent 55%),
+    radial-gradient(700px 500px at 80% 90%, rgba(217, 190, 128, 0.08), transparent 60%),
+    linear-gradient(180deg, #07070a 0%, #0b0c12 45%, #07070a 100%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  .voixa-glass {
+    @apply border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+  }
+  .voixa-card {
+    @apply voixa-glass rounded-3xl;
+  }
+  .voixa-button-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-champagne px-6 py-3 text-sm font-medium tracking-wide text-[#111] transition hover:bg-champagneDeep focus:outline-none focus:ring-2 focus:ring-champagne/70;
+  }
+  .voixa-button-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm font-medium tracking-wide text-pearl transition hover:border-white/40 hover:bg-white/5;
+  }
+  .voixa-input {
+    @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-pearl placeholder:text-pearl/40 focus:border-champagne/60 focus:outline-none focus:ring-1 focus:ring-champagne/40;
+  }
+  .voixa-label {
+    @apply mb-2 block text-xs uppercase tracking-[0.22em] text-pearl/60;
+  }
+  .voixa-heading {
+    @apply font-display font-light tracking-tight text-pearl;
+  }
+}
+
+.voixa-waveform-bar {
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(217, 190, 128, 0.9), rgba(217, 190, 128, 0.25));
+}
+
+.voixa-divider {
+  background: linear-gradient(90deg, transparent, rgba(245, 243, 238, 0.15), transparent);
+}
+
+.voixa-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.voixa-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(217, 190, 128, 0.25);
+  border-radius: 999px;
+}
+
+/* Subtle text shimmer for hero heading */
+.voixa-shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(245, 243, 238, 1) 20%,
+    rgba(217, 190, 128, 0.85) 40%,
+    rgba(245, 243, 238, 1) 60%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
