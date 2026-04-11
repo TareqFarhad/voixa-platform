@@ -8,7 +8,7 @@ export function generateStaticParams() {
   return [{ id: 'demo' }];
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export default function Page() {
   return <CreateSessionClient />;

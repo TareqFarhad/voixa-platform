@@ -86,9 +86,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const text = await response.text();
   const payload = text ? safeJson(text) : null;
   if (!response.ok) {
-    const message =
-      (payload && typeof payload === 'object' && 'message' in payload && String((payload as any).message)) ||
-      `Request failed with ${response.status}`;
+    const fallback = `Request failed with ${response.status}`;
+    const message: string =
+      payload && typeof payload === 'object' && 'message' in payload
+        ? String((payload as { message: unknown }).message)
+        : fallback;
     throw new VoixaApiError(message, response.status, payload);
   }
   return payload as T;

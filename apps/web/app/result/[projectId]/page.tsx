@@ -4,7 +4,7 @@ export function generateStaticParams() {
   return [{ projectId: 'demo' }];
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export default function Page() {
   return <ResultClient />;
