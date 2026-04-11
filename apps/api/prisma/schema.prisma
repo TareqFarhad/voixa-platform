@@ -1,0 +1,129 @@
+// Voixa Prisma schema
+// PostgreSQL data model for the Voixa premium AI vocal studio.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+  STUDIO
+}
+
+enum ProjectStatus {
+  DRAFT
+  READY
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AssetType {
+  RAW_VOCAL
+  INSTRUMENTAL
+  PROCESSED_VOCAL
+  PROCESSED_OUTPUT
+  PREVIEW
+  VOICE_SAMPLE
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  passwordHash String?
+  authProvider String        @default("password")
+  plan         Plan          @default(FREE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  profile      Profile?
+  projects     Project[]
+  voiceProfile VoiceProfile?
+}
+
+model Profile {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName            String?
+  consentVoiceProcessing Boolean  @default(false)
+  consentMarketing       Boolean  @default(false)
+  subscriptionStatus     String   @default("free")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model Project {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  songTitle String?
+  genre     String?
+  style     String?
+  lyrics    String?
+  settings  Json?
+  status    ProjectStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  assets    Asset[]
+  jobs      Job[]
+
+  @@index([userId])
+}
+
+model Asset {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type       AssetType
+  storageKey String
+  format     String?
+  durationMs Int?
+  sizeBytes  Int?
+  createdAt  DateTime  @default(now())
+
+  @@index([projectId])
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status       JobStatus @default(QUEUED)
+  progress     Int       @default(0)
+  stage        String?
+  payload      Json?
+  startedAt    DateTime?
+  endedAt      DateTime?
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model VoiceProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  embeddingReference String?
+  sampleCount        Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

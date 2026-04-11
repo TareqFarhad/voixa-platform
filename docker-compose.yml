@@ -1,4 +1,10 @@
 version: '3.9'
+
+# Local development infrastructure for the Voixa premium AI vocal studio.
+# Brings up Postgres + Redis so the API and worker can run on the host with
+# `pnpm dev` against this stack. The API and worker themselves are run from
+# pnpm/python so iteration stays fast - they connect to the services below.
+
 services:
   postgres:
     image: postgres:16

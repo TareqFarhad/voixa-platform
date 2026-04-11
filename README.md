@@ -1,60 +1,199 @@
 # Voixa Platform
 
-Voixa is a premium AI Vocal Studio MVP scaffold for turning a user's natural voice into polished studio-style songs while preserving identity.
+> Premium AI Vocal Atelier · Turn a natural voice into a polished studio
+> song while preserving the singer's identity.
 
-## Monorepo structure
+Voixa is a full-stack monorepo containing a luxury Next.js front-end, a
+NestJS API, a Python audio-processing worker, and the supporting
+PostgreSQL + Redis infrastructure required to run the Voixa MVP.
+
+## Monorepo
+
+```
+apps/
+  web/      Next.js 14 frontend (App Router, Tailwind, Framer Motion)
+  api/      NestJS backend with Prisma + JWT auth + Redis queue
+  worker/   Python audio processing worker (DSP pipeline + Redis consumer)
+scripts/    local helpers
+.github/    GitHub Actions workflow that deploys the static landing to Pages
+```
+
+## Architecture
 
 ```text
-apps/
-  web/      # Next.js + React + Tailwind frontend
-  api/      # NestJS backend API
-  worker/   # Python AI worker scaffold
-scripts/    # local helper scripts
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Next.js    │ ─▶ │  NestJS API  │ ─▶ │   Postgres   │
+│  (Atelier)   │    │  Auth · CRUD │    │  (Prisma)    │
+└──────────────┘    │  Uploads     │    └──────────────┘
+        ▲           │  Processing  │
+        │           └──────┬───────┘
+        │                  │ enqueue
+        │                  ▼
+        │           ┌──────────────┐    ┌──────────────┐
+        │           │    Redis     │ ─▶ │ Python worker│
+        │           │   (BLPOP)    │    │  DSP pipeline│
+        │           └──────────────┘    └──────────────┘
+        │                                       │ callback
+        └───────────────────────────────────────┘
 ```
+
+The frontend talks to the API for everything. The API persists projects
+in Postgres, stores raw uploads in object storage (local FS in dev, R2/S3
+in production), pushes processing jobs onto a Redis list, and exposes a
+callback endpoint the worker hits as the pipeline progresses. The
+Python worker reads jobs, runs the multi-stage DSP pipeline (noise
+reduction → tuning → alignment → enhancement → mastering), writes the
+processed track back into storage, and notifies the API.
 
 ## Tech foundation
 
-- **Frontend:** Next.js App Router, React, Tailwind CSS, Framer Motion-ready setup
-- **Backend:** NestJS modular API with placeholder domain modules
-- **Data services:** PostgreSQL + Redis via Docker Compose
-- **Worker:** Python service scaffold with typed processing contract placeholders
+- **Frontend** — Next.js 14 (App Router), React 18, Tailwind CSS, Framer
+  Motion, custom luxury design system
+- **Backend** — NestJS 10, Prisma 5, PostgreSQL 16, JWT auth (Passport),
+  ioredis queue producer, Multer-based uploads
+- **Worker** — Python 3.11, librosa + soundfile + numpy DSP pipeline,
+  Redis BLPOP consumer, requests callback to API
+- **Infrastructure** — docker compose for Postgres + Redis, monorepo
+  managed via pnpm workspaces
 
 ## Quick start
 
-1. Copy environment templates:
-   - `cp .env.example .env`
-   - `cp apps/web/.env.example apps/web/.env.local`
-   - `cp apps/api/.env.example apps/api/.env`
-   - `cp apps/worker/.env.example apps/worker/.env`
-2. Start infrastructure:
-   - `docker compose up -d`
-3. Install workspace dependencies:
-   - `pnpm install`
-4. Run all services:
-   - `pnpm dev`
+```bash
+# 1. Copy environment templates
+cp .env.example .env
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
+cp apps/worker/.env.example apps/worker/.env
 
-Alternatively run `./scripts/dev-up.sh`.
+# 2. Bring up Postgres + Redis
+docker compose up -d
+
+# 3. Install workspaces
+pnpm install
+
+# 4. Generate Prisma client and apply migrations
+pnpm --filter @voixa/api prisma:generate
+pnpm --filter @voixa/api prisma:deploy
+
+# 5. Run all services in parallel (web, api, worker)
+pnpm dev
+```
+
+You can also run `./scripts/dev-up.sh` for a one-shot bootstrap.
+
+The Voixa atelier will be live at:
+
+| Service | URL                              |
+| ------- | -------------------------------- |
+| Web     | http://localhost:3000            |
+| API     | http://localhost:4000/api        |
+| Health  | http://localhost:4000/api/health |
+
+The Python worker requires `numpy`, `soundfile`, `librosa`, and
+optionally `ffmpeg`. When any of those are missing the worker stays
+online in **graceful degradation mode** - it copies audio through the
+pipeline so the API and web app are still fully exercisable end to end.
 
 ## Available scripts
 
-- `pnpm dev` - run frontend, backend, and worker in parallel
-- `pnpm dev:web` - run frontend only
-- `pnpm dev:api` - run backend only
-- `pnpm dev:worker` - run Python worker health runner
-- `pnpm build` - workspace build (if script exists per app)
-- `pnpm lint` - workspace lint (if script exists per app)
+| Script             | Purpose                                       |
+| ------------------ | --------------------------------------------- |
+| `pnpm dev`         | Run web, api, and worker concurrently         |
+| `pnpm dev:web`     | Run only the Next.js frontend                 |
+| `pnpm dev:api`     | Run only the NestJS backend                   |
+| `pnpm dev:worker`  | Run only the Python worker                    |
+| `pnpm build`       | Build every workspace that exposes `build`    |
+| `pnpm typecheck`   | Type-check every workspace                    |
+| `pnpm lint`        | Lint every workspace                          |
 
-## Current foundation status
+## API surface (MVP)
 
-Implemented in this scaffold:
-- monorepo workspace configuration
-- base Next.js app with premium dark theme primitives and core placeholder routes
-- base NestJS app with health endpoint + module placeholders (`auth`, `projects`, `uploads`, `processing`, `profile`)
-- Python worker package with configuration, typed job model, and pipeline stage placeholders
-- Docker Compose services for Postgres + Redis
+```
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/logout
+POST   /api/auth/reset-password
+GET    /api/auth/me
 
-Planned next (not yet implemented):
-- Prisma schema and migrations
-- authentication flows
-- project creation/upload/processing orchestration
-- AI model integration and real audio pipeline
+GET    /api/projects
+POST   /api/projects
+GET    /api/projects/:id
+PUT    /api/projects/:id
+DELETE /api/projects/:id
+
+POST   /api/uploads/vocal/:projectId          (multipart 'file')
+POST   /api/uploads/instrumental/:projectId   (multipart 'file')
+
+POST   /api/processing/start
+GET    /api/processing/status/:jobId
+POST   /api/processing/retry/:jobId
+POST   /api/processing/callback               (worker → api)
+
+GET    /api/profile
+PUT    /api/profile
+DELETE /api/profile/voice-model
+
+GET    /api/exports/:projectId
+GET    /api/storage/...                        (local dev only)
+GET    /api/health
+```
+
+## Database (Prisma)
+
+Entities: `User`, `Profile`, `Project`, `Asset`, `Job`, `VoiceProfile`.
+Schema lives in `apps/api/prisma/schema.prisma`. The initial migration is
+under `apps/api/prisma/migrations/20250101000000_init`.
+
+## Pipeline stages (worker)
+
+```
+preparing → cleaning → tuning → aligning → polishing → mastering → finalizing
+```
+
+Each stage emits a callback to the API so the **Processing screen** can
+show the artist where Voixa is in their session in real time.
+
+## Premium UI direction
+
+- Deep noir background with midnight, burgundy, and champagne accents
+- `Cormorant Garamond` for display headings, `Inter` for body text
+- Custom AI orb, animated waveform, and refinement-slider components
+- Emotive UX writing — _"bring your voice"_, _"shape the feeling"_,
+  _"refine your sound"_ — never technical jargon
+
+## GitHub Pages deployment
+
+This repo ships with a workflow at
+`.github/workflows/deploy-pages.yml` that builds the Next.js frontend in
+**static export** mode and publishes it to GitHub Pages on every push to
+`main`.
+
+To enable Pages on your fork:
+
+1. Push to `main` (the workflow will run automatically).
+2. In the repository **Settings → Pages**, set the source to
+   **GitHub Actions** if it has not been set already.
+3. Open the workflow run to find the deployed URL — typically
+   `https://<owner>.github.io/<repo>/`.
+
+> **Important.** GitHub Pages only hosts the static frontend (landing,
+> auth shells, marketing pages). The full Voixa experience requires the
+> Node.js API, Postgres, Redis, and Python worker running somewhere they
+> can talk to each other. The static build still uses the same code so
+> any deployment of the API can be configured via
+> `NEXT_PUBLIC_API_URL` at build time.
+
+## Roadmap (post-MVP)
+
+- Stripe billing for the Premium and Studio tiers
+- S3 / R2 storage driver swap (interface already in place)
+- BullMQ-based processing queue with retries and dead-lettering
+- Speaker embedding via Resemblyzer / ECAPA-TDNN for stronger identity
+  preservation
+- Neural pitch correction model behind the existing DSP slider
+- Admin panel: user list, job monitoring, audit log
+- Mobile-first capture experience
+
+## License
+
+Proprietary. © Voixa Atelier.

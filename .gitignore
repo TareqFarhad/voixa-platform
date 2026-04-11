@@ -1,10 +1,16 @@
 node_modules
 .pnpm-store
 .next
+out
 dist
 coverage
 .env
 .env.local
+.env.*.local
+.storage
 __pycache__
 *.pyc
+.venv
 .DS_Store
+.turbo
+build
