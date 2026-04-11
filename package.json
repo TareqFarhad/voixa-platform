@@ -12,6 +12,7 @@
     "dev:api": "pnpm --filter @voixa/api dev",
     "dev:worker": "pnpm --filter @voixa/worker dev",
     "build": "pnpm -r --if-present build",
+    "build:pages": "NEXT_PUBLIC_STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/voixa-platform NEXT_PUBLIC_API_URL='' pnpm --filter @voixa/web build && rm -rf docs && mkdir -p docs && cp -r apps/web/out/. docs/ && touch docs/.nojekyll",
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck"
   },
